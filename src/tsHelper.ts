@@ -40,6 +40,9 @@ export function getImportsForFile(file: string, srcRoot: string) {
       if (/(^\.\/)|(^\.\.\/)/.test(fileName)) {
         return path.join(path.dirname(file), fileName)
       }
+      if(/^client\//.test(fileName)) {
+        return path.join(srcRoot, fileName.slice(7))
+      }
       return path.join(srcRoot, fileName);
     }).map(fileName => {
       if (fs.existsSync(`${fileName}.ts`)) {
