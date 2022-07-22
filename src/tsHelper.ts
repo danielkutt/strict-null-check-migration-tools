@@ -10,8 +10,14 @@ export function getImportsForFile(file: string, srcRoot: string) {
   file = fs.realpathSync(file)
 
   if (fs.lstatSync(file).isDirectory()) {
-    const index = path.join(file, "index.ts")
-    if (fs.existsSync(index)) {
+    const indexTS = path.join(file, "index.ts")
+    const indexTSX = path.join(file, "index.tsx")
+    const index = fs.existsSync(indexTSX)
+        ? indexTSX
+        : fs.existsSync(indexTS)
+            ? indexTS
+            : null;
+    if (index) {
       // https://basarat.gitbooks.io/typescript/docs/tips/barrel.html
       console.warn(`Warning: Barrel import: ${path.relative(srcRoot, file)}`)
       file = index
@@ -24,8 +30,11 @@ export function getImportsForFile(file: string, srcRoot: string) {
   return fileInfo.importedFiles
     .map(importedFile => importedFile.fileName)
     // remove svg, css imports
-    .filter(fileName => !fileName.endsWith(".css") && !fileName.endsWith(".svg") && !fileName.endsWith(".json"))
+    .filter(fileName => !fileName.endsWith(".css") && !fileName.endsWith(".svg") && !fileName.endsWith(".json") && !fileName.endsWith(".svg?react"))
     .filter(fileName => !fileName.endsWith(".js") && !fileName.endsWith(".jsx")) // Assume .js/.jsx imports have a .d.ts available
+    .filter(fileName => !fileName.endsWith(".test.ts") && !fileName.endsWith(".test.tsx")) // Ignore test files
+    .filter(fileName => !fileName.endsWith(".graphql.ts"))
+    .filter(x => !/@.+\//.test(x))
     .filter(x => /\//.test(x)) // remove node modules (the import must contain '/')
     .map(fileName => {
       if (/(^\.\/)|(^\.\.\/)/.test(fileName)) {
