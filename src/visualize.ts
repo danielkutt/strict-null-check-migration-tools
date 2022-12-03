@@ -35,7 +35,7 @@ export interface DependencyNode {
 
 async function summary() {
   const allFiles = await forEachFileInSrc(srcRoot)
-  const checkedFiles = await getCheckedFiles(tsconfigPath, srcRoot)
+  const checkedFiles = await getCheckedFiles(tsconfigPath.replace("tsconfig.json", "tsconfig.strict.json"), srcRoot)
   const eligibleFiles = new Set([
     ...await listStrictNullCheckEligibleFiles(srcRoot, checkedFiles),
     ...(await listStrictNullCheckEligibleCycles(srcRoot, checkedFiles)).reduce((a, b) => a.concat(b), [])

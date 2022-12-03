@@ -8,7 +8,7 @@ const srcRoot = path.dirname(tsconfigPath)
 runFindCycles()
 
 async function runFindCycles() {
-  let files = await forEachFileInSrc(srcRoot + '/client')
+  let files = await forEachFileInSrc(srcRoot)
   let cycles = findCycles(srcRoot, files)
 
   const singleFiles = []
