@@ -1,8 +1,8 @@
 import * as fs from 'fs'
-import * as path from 'path'
 import * as glob from 'glob'
-import { ImportTracker } from './tsHelper'
+import * as path from 'path'
 import { findCycles } from './findCycles'
+import { ImportTracker } from './tsHelper'
 
 function considerFile(file: string): boolean {
   return (file.endsWith('.ts') || file.endsWith('.tsx')) &&
@@ -21,7 +21,7 @@ function hasUncheckedImport(file: string, importsTracker: ImportTracker, checked
 
 export function forEachFileInSrc(srcRoot: string): Promise<string[]> {
   return new Promise((resolve, reject) => {
-    glob(`${srcRoot}/**/*.ts?(x)`, (err, files) => {
+    glob(`${srcRoot}/**/!(*.test).ts?(x)`, (err, files) => {
       if (err) {
         return reject(err)
       }
@@ -119,12 +119,13 @@ export async function getCheckedFiles(tsconfigPath: string, srcRoot: string): Pr
             set.add(file)
           }
         }
-        resolve()
+        resolve(null)
       })
     });
   }));
 
   await Promise.all(tsconfig.exclude.map(file => {
+    // console.log(file)
     return new Promise((resolve, reject) => {
       glob(path.join(srcRoot, file), (err, files) => {
         if (err) {
@@ -134,7 +135,7 @@ export async function getCheckedFiles(tsconfigPath: string, srcRoot: string): Pr
         for (const file of files) {
           set.delete(file)
         }
-        resolve()
+        resolve(null)
       })
     });
   }));

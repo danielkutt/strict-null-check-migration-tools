@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { listStrictNullCheckEligibleFiles, getCheckedFiles } from './getStrictNullCheckEligibleFiles'
 import { ErrorCounter } from './errorCounter'
+import { getCheckedFiles, listStrictNullCheckEligibleFiles } from './getStrictNullCheckEligibleFiles'
 
 const tsconfigPath = process.argv[2]
 const srcRoot = path.dirname(tsconfigPath)
@@ -26,7 +26,7 @@ async function tryAutoAddStrictNulls() {
       const relativeFilePath = path.relative(srcRoot, eligibleFiles[i])
       console.log(`Trying to auto add '${relativeFilePath}' (file ${i+1}/${eligibleFiles.length})`)
 
-      const errorCount = await errorCounter.tryCheckingFile(relativeFilePath)
+      const errorCount = errorCounter.tryCheckingFile(relativeFilePath)
       if (errorCount === 0) {
         console.log(`👍`)
         addFileToConfig(relativeFilePath)

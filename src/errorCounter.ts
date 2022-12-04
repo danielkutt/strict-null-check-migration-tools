@@ -1,54 +1,71 @@
-import * as fs from 'fs'
-import { spawn, ChildProcessWithoutNullStreams, execSync } from 'child_process'
+import { execSync } from "child_process";
+import * as fs from "fs";
 
-const buildCompletePattern = /Found (\d+) errors?\. Watching for file changes\./gi
+let buildCompletePattern = () => /Found (\d+) error/gi;
 
 export class ErrorCounter {
-  private tscProcess: ChildProcessWithoutNullStreams
-  private tsconfigCopyPath: string
-  private originalConfig: any
+  private tscProcess: () => string;
+  private tsconfigCopyPath: string;
+  private originalConfig: any;
 
   constructor(private tsconfigPath: string) {}
 
   public start(): void {
-    this.tsconfigCopyPath = this.tsconfigPath + `copy${Math.floor(Math.random() * (1 << 16))}.json`
+    this.tsconfigCopyPath =
+      this.tsconfigPath + `copy${Math.floor(Math.random() * (1 << 16))}.json`;
 
     // Make a copy of tsconfig because we're going to keep modifying it.
-    execSync(`cp ${this.tsconfigPath} ${this.tsconfigCopyPath}`)
-    this.originalConfig = JSON.parse(fs.readFileSync(this.tsconfigCopyPath).toString())
+    execSync(`cp ${this.tsconfigPath} ${this.tsconfigCopyPath}`);
+    this.originalConfig = JSON.parse(
+      fs.readFileSync(this.tsconfigCopyPath).toString()
+    );
 
     // Opens TypeScript in watch mode so that it can (hopefully) incrementally
     // compile as we add and remove files from the whitelist.
-    this.tscProcess = spawn('node_modules/typescript/bin/tsc', ['-p', this.tsconfigCopyPath, '--watch', '--noEmit'])
+    this.tscProcess = () => {
+      try {
+        return execSync(
+          `../billing-fe/node_modules/typescript/bin/tsc -p ${this.tsconfigCopyPath} --noEmit`
+        ).toString();
+      } catch(err) {
+        return err.output.toString()
+      }
+    }
   }
 
   public end(): void {
-    this.tscProcess.kill()
-    execSync(`rm ${this.tsconfigCopyPath}`)
+    // this.tscProcess.kill()
+    execSync(`rm ${this.tsconfigCopyPath}`);
   }
 
-  public async tryCheckingFile(relativeFilePath: string): Promise<number> {
-    return new Promise<number>(resolve => {
-      const listener = (data: any) => {
-        const textOut = data.toString()
-        const match = buildCompletePattern.exec(textOut)
+  public tryCheckingFile(relativeFilePath: string): number {
+    // Create a new config with the file removed from excludes
+    // const exclude = new Set(this.originalConfig.exclude)
+    // exclude.delete('./' + relativeFilePath)
+    const files = this.originalConfig.files;
 
-        if (match) {
-          this.tscProcess.stdout.removeListener('data', listener)
-          const errorCount = +match[1]
-          resolve(errorCount)
-        }
-      }
+    fs.writeFileSync(
+      this.tsconfigCopyPath,
+      JSON.stringify(
+        {
+          ...this.originalConfig,
+          files: [...files, "./" + relativeFilePath],
+        },
+        null,
+        2
+      )
+    );
 
-      this.tscProcess.stdout.on('data', listener)
+    const textOut = this.tscProcess();
 
-      // Create a new config with the file removed from excludes
-      const exclude = new Set(this.originalConfig.exclude)
-      exclude.delete('./' + relativeFilePath)
-      fs.writeFileSync(this.tsconfigCopyPath, JSON.stringify({
-        ...this.originalConfig,
-        exclude: [...exclude],
-      }, null, 2))
-    })
+    if (textOut == '') {
+      return 0;
+    }
+    const match = buildCompletePattern().exec(textOut);
+    if (match) {
+      const errorCount = +match[1];
+      return errorCount;
+    }
+    throw Error("Result didn't match the pattern");
   }
 }
