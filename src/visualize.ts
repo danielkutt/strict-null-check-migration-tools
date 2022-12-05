@@ -76,7 +76,7 @@ async function summary() {
     if (eligible && countErrors) {
       const relativePath = path.relative(srcRoot, files[0])
       console.log(`Counting errors for eligible file: '${relativePath}'`)
-      errorCount = errorCounter.tryCheckingFile(relativePath)
+      errorCount = await errorCounter.tryCheckingFile(relativePath)
     }
 
     files.sort()

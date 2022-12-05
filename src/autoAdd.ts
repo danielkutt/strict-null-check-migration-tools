@@ -26,7 +26,7 @@ async function tryAutoAddStrictNulls() {
       const relativeFilePath = path.relative(srcRoot, eligibleFiles[i])
       console.log(`Trying to auto add '${relativeFilePath}' (file ${i+1}/${eligibleFiles.length})`)
 
-      const errorCount = errorCounter.tryCheckingFile(relativeFilePath)
+      const errorCount = await errorCounter.tryCheckingFile(relativeFilePath)
       if (errorCount === 0) {
         console.log(`👍`)
         addFileToConfig(relativeFilePath)
