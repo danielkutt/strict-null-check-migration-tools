@@ -34,7 +34,6 @@ export class ErrorCounter {
   }
 
   public end(): void {
-    // this.tscProcess.kill()
     execSync(`rm ${this.tsconfigCopyPath}`);
   }
 

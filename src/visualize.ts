@@ -1,9 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import { listStrictNullCheckEligibleFiles, getCheckedFiles, forEachFileInSrc, listStrictNullCheckEligibleCycles } from './getStrictNullCheckEligibleFiles'
-import { ImportTracker } from './tsHelper'
-import { findCycles } from './findCycles'
 import { ErrorCounter } from './errorCounter'
+import { findCycles } from './findCycles'
+import { forEachFileInSrc, getCheckedFiles, listStrictNullCheckEligibleCycles, listStrictNullCheckEligibleFiles } from './getStrictNullCheckEligibleFiles'
+import { ImportTracker } from './tsHelper'
 
 const tsconfigPath = process.argv[2]
 const srcRoot = path.dirname(tsconfigPath)
@@ -34,15 +34,16 @@ export interface DependencyNode {
 }
 
 async function summary() {
+  const strictConfig = tsconfigPath.replace("tsconfig.json", "tsconfig.strict.json");
   const allFiles = await forEachFileInSrc(srcRoot)
-  const checkedFiles = await getCheckedFiles(tsconfigPath.replace("tsconfig.json", "tsconfig.strict.json"), srcRoot)
+  const checkedFiles = await getCheckedFiles(strictConfig, srcRoot)
   const eligibleFiles = new Set([
     ...await listStrictNullCheckEligibleFiles(srcRoot, checkedFiles),
     ...(await listStrictNullCheckEligibleCycles(srcRoot, checkedFiles)).reduce((a, b) => a.concat(b), [])
   ])
   const importTracker = new ImportTracker(srcRoot)
 
-  let errorCounter = new ErrorCounter(tsconfigPath)
+  let errorCounter = new ErrorCounter(strictConfig)
   if (countErrors) {
     errorCounter.start()
   }
@@ -75,7 +76,7 @@ async function summary() {
     if (eligible && countErrors) {
       const relativePath = path.relative(srcRoot, files[0])
       console.log(`Counting errors for eligible file: '${relativePath}'`)
-      errorCount = await errorCounter.tryCheckingFile(relativePath)
+      errorCount = errorCounter.tryCheckingFile(relativePath)
     }
 
     files.sort()
