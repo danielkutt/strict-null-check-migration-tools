@@ -1,5 +1,5 @@
-import * as path from 'path'
 import * as fs from 'fs'
+import * as path from 'path'
 import * as ts from 'typescript'
 
 /**
@@ -30,7 +30,7 @@ export function getImportsForFile(file: string, srcRoot: string) {
   return fileInfo.importedFiles
     .map(importedFile => importedFile.fileName)
     // remove svg, css imports
-    .filter(fileName => !fileName.endsWith(".css") && !fileName.endsWith(".svg") && !fileName.endsWith(".json") && !fileName.endsWith(".svg?react"))
+    .filter(fileName => !fileName.endsWith(".css") && !fileName.endsWith(".svg") && !fileName.endsWith(".json") && !fileName.endsWith(".svg?react") && !fileName.endsWith(".png"))
     .filter(fileName => !fileName.endsWith(".js") && !fileName.endsWith(".jsx")) // Assume .js/.jsx imports have a .d.ts available
     .filter(fileName => !fileName.endsWith(".test.ts") && !fileName.endsWith(".test.tsx")) // Ignore test files
     .filter(fileName => !fileName.endsWith(".graphql.ts"))

@@ -6,7 +6,9 @@
     "find-candidates": "tsc && node src/findCandidates.js",
     "auto-add": "tsc && node src/autoAdd.js",
     "find-cycles": "tsc && node src/runFindCycles.js",
-    "visualize": "tsc && node src/visualize.js"
+    "visualize": "tsc && node src/visualize.js",
+    "watcher": "tsc && node src/fileWatcher.js",
+    "data-server": "tsc && node src/dataWatcher.js"
   },
   "keywords": [
     "strict",
@@ -18,8 +20,11 @@
   "author": "Figma Inc.",
   "license": "MIT",
   "dependencies": {
+    "chokidar": "^3.5.3",
     "glob": "^7.1.6",
-    "typescript": "3.7.2"
+    "lodash.debounce": "^4.0.8",
+    "typescript": "3.7.2",
+    "ws": "^8.11.0"
   },
   "devDependencies": {
     "@types/glob": "^7.1.1",
